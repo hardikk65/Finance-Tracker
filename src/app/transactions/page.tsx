@@ -94,17 +94,31 @@ export default function TransactionsPage() {
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
-      'Shopping': '#4287f5',
-      'Bills & Utilities': '#f54242',
-      'Healthcare': '#42f5b3',
-      'Groceries': '#f5a142',
-      'Transportation': '#a142f5',
-      'Food & Dining': '#f542a7',
-      'Other': '#b3b3b3',
-      'Home & Garden': '#b3f542'
+    const colors: Record<string, string> = {
+      'food & dining': '#f542a7',
+      'home & garden': '#b3f542',
+      'transportation': '#a142f5',
+      'shopping': '#4287f5',
+      'entertainment': '#f54242',
+      'bills & utilities': '#f54242',
+      'health': '#42f5b3',
+      'healthcare': '#42f5b3',
+      'travel': '#f5a142',
+      'education': '#a142f5',
+      'groceries': '#f5a142',
+      'other': '#b3b3b3'
     };
-    return colors[category as keyof typeof colors] || '#b3b3b3';
+    return colors[category.toLowerCase()] || '#b3b3b3';
+  };
+
+  const getContrastText = (bgColor: string) => {
+    if (!bgColor) return '#fff';
+    const color = bgColor.replace('#', '');
+    const r = parseInt(color.substring(0,2), 16);
+    const g = parseInt(color.substring(2,4), 16);
+    const b = parseInt(color.substring(4,6), 16);
+    const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+    return luminance > 0.6 ? '#222' : '#fff';
   };
 
   if (loading) {
@@ -191,8 +205,8 @@ export default function TransactionsPage() {
                         <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
                           <span>{new Date(tx.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                           <Badge 
-                            className="ml-2" 
-                            style={{ backgroundColor: getCategoryColor(tx.category) }}
+                            className="ml-2 border-0"
+                            style={{ backgroundColor: getCategoryColor(tx.category), borderColor: getCategoryColor(tx.category), color: getContrastText(getCategoryColor(tx.category)) }}
                           >
                             {tx.category}
                           </Badge>

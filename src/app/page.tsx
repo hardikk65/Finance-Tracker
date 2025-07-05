@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { fetchTransactions, fetchBudgets, setBudget } from '@/lib/api';
 
 type Transaction = {
@@ -69,16 +70,31 @@ function calculateBudgetVsActual() {
 
 function getCategoryColor(category: string) {
   const colors: Record<string, string> = {
-    'Shopping': '#4287f5',
-    'Bills & Utilities': '#f54242',
-    'Healthcare': '#42f5b3',
-    'Groceries': '#f5a142',
-    'Transportation': '#a142f5',
-    'Food & Dining': '#f542a7',
-    'Other': '#b3b3b3',
-    'Home & Garden': '#b3f542'
+    'food & dining': '#f542a7',
+    'home & garden': '#b3f542',
+    'transportation': '#a142f5',
+    'shopping': '#4287f5',
+    'entertainment': '#f54242',
+    'bills & utilities': '#f54242',
+    'health': '#42f5b3',
+    'healthcare': '#42f5b3',
+    'travel': '#f5a142',
+    'education': '#a142f5',
+    'groceries': '#f5a142',
+    'other': '#b3b3b3'
   };
-  return colors[category] || '#b3b3b3';
+  return colors[category.toLowerCase()] || '#b3b3b3';
+}
+
+function getContrastText(bgColor: string) {
+  // luminance check 
+  if (!bgColor) return '#fff';
+  const color = bgColor.replace('#', '');
+  const r = parseInt(color.substring(0,2), 16);
+  const g = parseInt(color.substring(2,4), 16);
+  const b = parseInt(color.substring(4,6), 16);
+  const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return luminance > 0.6 ? '#222' : '#fff';
 }
 
 function processTransactionsForCharts(transactions: Transaction[]) {
@@ -156,27 +172,6 @@ export default function Home() {
     }
   }
 
-  const budgetData = Object.keys(budgetInputs).length > 0
-    ? Object.keys(budgetInputs).map((category) => {
-        const actual = transactions
-          .filter((tx) => tx.category === category)
-          .reduce((sum, tx) => sum + tx.amount, 0);
-        return {
-          category,
-          budget: Number(budgetInputs[category]) || 0,
-          actual,
-        };
-      })
-    : [];
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
-
   const allCategories = [
     'Food & Dining',
     'Home & Garden',
@@ -191,17 +186,39 @@ export default function Home() {
     'Other',
   ];
 
+  const budgetData = allCategories.map((category) => {
+    const budget = Number(budgetInputs[category] || 0);
+    const actual = transactions
+      .filter((tx) => tx.category.toLowerCase() === category.toLowerCase())
+      .reduce((sum, tx) => sum + tx.amount, 0);
+    return {
+      category,
+      budget,
+      actual,
+    };
+  });
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   async function handleBudgetChange(category: string, value: string) {
     setBudgetInputs((prev) => ({ ...prev, [category]: value }));
   }
 
-  async function handleBudgetSave(category: string) {
+  async function handleSaveAllBudgets() {
     setBudgetLoading(true);
     try {
-      await setBudget(category, budgetMonth, Number(budgetInputs[category]));
+      for (const category of allCategories) {
+        await setBudget(category, budgetMonth, Number(budgetInputs[category] || 0));
+      }
       await fetchBudgets(budgetMonth);
     } catch (error) {
-      console.error('Failed to save budget:', error);
+      console.error('Failed to save budgets:', error);
     } finally {
       setBudgetLoading(false);
     }
@@ -266,7 +283,13 @@ export default function Home() {
                       <div className="text-xs text-gray-400">
                         {new Date(tx.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                         {tx.category && (
-                          <span className="ml-2 px-2 py-0.5 rounded bg-zinc-800 text-xs">{tx.category}</span>
+                          <Badge 
+                            variant="outline" 
+                            className="ml-2 border-0"
+                            style={{ backgroundColor: getCategoryColor(tx.category), color: getContrastText(getCategoryColor(tx.category)) }}
+                          >
+                            {tx.category}
+                          </Badge>
                         )}
                       </div>
                     </div>
@@ -285,7 +308,12 @@ export default function Home() {
             <div className="flex flex-wrap gap-4">
               {allCategories.map((category) => (
                 <div key={category} className="flex flex-col items-start">
-                  <label className="text-sm mb-1">{category}</label>
+                  <Badge 
+                    variant="outline" 
+                    className="text-white mb-1 bg-zinc-800 border-zinc-700"
+                  >
+                    {category}
+                  </Badge>
                   <div className="flex gap-2 items-center">
                     <input
                       type="number"
@@ -296,17 +324,19 @@ export default function Home() {
                       placeholder="0"
                       disabled={budgetLoading}
                     />
-                    <Button
-                      size="sm"
-                      className="bg-white text-black px-2 py-1 rounded hover:bg-gray-200"
-                      onClick={() => handleBudgetSave(category)}
-                      disabled={budgetLoading}
-                    >
-                      Save
-                    </Button>
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button
+                size="sm"
+                className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200"
+                onClick={handleSaveAllBudgets}
+                disabled={budgetLoading}
+              >
+                Save All
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -352,8 +382,13 @@ export default function Home() {
               <div className="flex flex-wrap gap-3 justify-center mt-4">
                 {categoryData.map((entry) => (
                   <div key={entry.name} className="flex items-center gap-2">
-                    <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
-                    <span className="text-sm">{entry.name}</span>
+                    <Badge 
+                      variant="outline" 
+                      className="border-0"
+                      style={{ backgroundColor: entry.color, color: getContrastText(entry.color) }}
+                    >
+                      {entry.name}
+                    </Badge>
                   </div>
                 ))}
               </div>
