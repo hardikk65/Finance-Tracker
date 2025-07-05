@@ -4,7 +4,6 @@ import React from "react";
 import {
     Card,
     CardContent,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
@@ -21,7 +20,6 @@ import {
 import { format } from "date-fns"
 import { Calendar as CalendarIcon, PlusCircle } from "lucide-react"
  
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Popover,

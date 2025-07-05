@@ -2,12 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { Calendar, CreditCard, TrendingUp } from "lucide-react";
-import type { TooltipProps } from 'recharts';
-import { fetchTransactions, fetchBudgets, setBudget } from '@/lib/api';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
+import { fetchTransactions, fetchBudgets, setBudget } from '@/lib/api';
 
 // Example data
 const monthlyExpenses = [
@@ -203,12 +200,6 @@ export default function Home() {
     } else {
       spendingInsight = `Your spending is the same as last month.`;
     }
-  }
-
-  // Helper: get budget for a category
-  function getBudgetForCategory(category: string) {
-    const found = budgets.find((b) => b.category === category);
-    return found ? found.amount : 0;
   }
 
   // Build budget vs actual data for chart

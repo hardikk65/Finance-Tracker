@@ -3,7 +3,7 @@ export async function fetchTransactions() {
   return response.json();
 }
 
-export async function createTransaction(data: any) {
+export async function createTransaction(data: unknown) {
   const response = await fetch('/api/transactions', {
     method: 'POST',
     headers: {
@@ -14,7 +14,7 @@ export async function createTransaction(data: any) {
   return response.json();
 }
 
-export async function updateTransaction(id: string, data: any) {
+export async function updateTransaction(id: string, data: unknown) {
   const response = await fetch(`/api/transactions/${id}`, {
     method: 'PUT',
     headers: {
