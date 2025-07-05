@@ -236,7 +236,7 @@ export default function TransactionsPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
                                 <AlertDialogDescription className="text-gray-400">
-                                  Are you sure you want to delete "{tx.title}"? This action cannot be undone.
+                                  Are you sure you want to delete &quot;{tx.title}&quot;? This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

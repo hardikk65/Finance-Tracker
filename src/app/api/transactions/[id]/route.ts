@@ -2,7 +2,7 @@ import { dbConnect } from "@/lib/mongoose";
 import Transaction from "@/models/Transaction";
 import { NextResponse } from "next/server";
 
-// GET single transaction
+// GET 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -13,7 +13,7 @@ export async function GET(
   return NextResponse.json(transaction);
 }
 
-// PUT (update) transaction
+// PUT 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -25,7 +25,7 @@ export async function PUT(
   return NextResponse.json(transaction);
 }
 
-// DELETE transaction
+// DELETE 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

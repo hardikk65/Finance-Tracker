@@ -6,40 +6,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveCo
 import { Button } from "@/components/ui/button";
 import { fetchTransactions, fetchBudgets, setBudget } from '@/lib/api';
 
-// Example data
-const monthlyExpenses = [
-  { month: "May 2025", amount: 1950 },
-  { month: "Jun 2025", amount: 1450 },
-  { month: "Jul 2025", amount: 1600 },
-];
-
-const categoryData = [
-  { name: "Shopping", value: 30, color: "#4287f5" },
-  { name: "Bills & Utilities", value: 22, color: "#f54242" },
-  { name: "Healthcare", value: 19, color: "#42f5b3" },
-  { name: "Groceries", value: 17, color: "#f5a142" },
-  { name: "Transportation", value: 6, color: "#a142f5" },
-  { name: "Food & Dining", value: 3, color: "#f542a7" },
-  { name: "Other", value: 2, color: "#b3b3b3" },
-  { name: "Home & Garden", value: 1, color: "#b3f542" },
-];
-
-// Add example data for Budget vs Actual Spending
-const budgetVsActualData = [
-  { category: "Food & Dining", budget: 800, actual: 650 },
-  { category: "Transportation", budget: 300, actual: 250 },
-  { category: "Shopping", budget: 400, actual: 380 },
-  { category: "Entertainment", budget: 200, actual: 180 },
-  { category: "Bills & Utilities", budget: 500, actual: 450 },
-  { category: "Healthcare", budget: 200, actual: 190 },
-  { category: "Travel", budget: 300, actual: 220 },
-  { category: "Education", budget: 150, actual: 120 },
-  { category: "Groceries", budget: 600, actual: 580 },
-  { category: "Home & Garden", budget: 250, actual: 200 },
-  { category: "Other", budget: 200, actual: 150 },
-];
-
-// Add this type definition at the top of your file, after imports
 type Transaction = {
   _id: string;
   title: string;
@@ -49,16 +15,22 @@ type Transaction = {
   description?: string;
 };
 
-function CustomTooltip({ active, payload, label }: any) {
+type TooltipEntry = {
+  color?: string;
+  name?: string;
+  value?: number;
+};
+
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipEntry[]; label?: string | number }) {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-zinc-900 border border-zinc-700 text-white rounded-md px-4 py-2 shadow">
-      <div className="font-semibold mb-1">{label}</div>
-      {payload.map((entry: any, idx: number) => (
+      <div className="font-semibold mb-1">{String(label)}</div>
+      {payload.map((entry, idx) => (
         <div key={idx} className="flex items-center gap-2">
           <span
             className="inline-block w-2 h-2 rounded-full"
-            style={{ backgroundColor: entry.color }}
+            style={{ backgroundColor: entry.color || '#b3b3b3' }}
           />
           <span className="capitalize">{entry.name}:</span>
           <span className="font-bold">{entry.value}</span>
@@ -68,10 +40,8 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-// Add these helper functions before processTransactionsForCharts
-function groupByMonth(transactions: any[]) {
-  // Group transactions by month and sum amounts
-  const monthlyMap = new Map();
+function groupByMonth(transactions: Transaction[]) {
+  const monthlyMap = new Map<string, number>();
   transactions.forEach(tx => {
     const date = new Date(tx.date);
     const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
@@ -80,29 +50,25 @@ function groupByMonth(transactions: any[]) {
   return Array.from(monthlyMap.entries()).map(([month, amount]) => ({ month, amount }));
 }
 
-function groupByCategory(transactions: any[]) {
-  // Group transactions by category and calculate percentages
-  const categoryMap = new Map();
+function groupByCategory(transactions: Transaction[]) {
+  const categoryMap = new Map<string, number>();
   const total = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-  
   transactions.forEach(tx => {
     categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + tx.amount);
   });
-  
   return Array.from(categoryMap.entries()).map(([name, value]) => ({
     name,
-    value: Math.round((value as number / total) * 100),
+    value: total ? Math.round((value / total) * 100) : 0,
     color: getCategoryColor(name)
   }));
 }
 
-function calculateBudgetVsActual(transactions: any[]) {
-  // For now, return mock budget data
-  return budgetVsActualData;
+function calculateBudgetVsActual() {
+  return [];
 }
 
 function getCategoryColor(category: string) {
-  const colors = {
+  const colors: Record<string, string> = {
     'Shopping': '#4287f5',
     'Bills & Utilities': '#f54242',
     'Healthcare': '#42f5b3',
@@ -112,29 +78,21 @@ function getCategoryColor(category: string) {
     'Other': '#b3b3b3',
     'Home & Garden': '#b3f542'
   };
-  return colors[category as keyof typeof colors] || '#b3b3b3';
+  return colors[category] || '#b3b3b3';
 }
 
-// Helper functions to process transaction data
-function processTransactionsForCharts(transactions: any[]) {
-  // Group by month for bar chart
+function processTransactionsForCharts(transactions: Transaction[]) {
   const monthlyData = groupByMonth(transactions);
-  
-  // Group by category for pie chart
   const categoryData = groupByCategory(transactions);
-  
-  // Calculate budget vs actual
-  const budgetData = calculateBudgetVsActual(transactions);
-  
+  const budgetData = calculateBudgetVsActual();
   return { monthlyData, categoryData, budgetData };
 }
 
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [budgets, setBudgets] = useState<any[]>([]);
   const [budgetInputs, setBudgetInputs] = useState<{ [category: string]: string }>({});
-  const [budgetMonth, setBudgetMonth] = useState(() => {
+  const [budgetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
@@ -159,10 +117,8 @@ export default function Home() {
       setBudgetLoading(true);
       try {
         const data = await fetchBudgets(budgetMonth);
-        setBudgets(data);
-        // Set initial input values
         const inputObj: { [category: string]: string } = {};
-        data.forEach((b: any) => {
+        data.forEach((b: { category: string; amount: number }) => {
           inputObj[b.category] = b.amount.toString();
         });
         setBudgetInputs(inputObj);
@@ -183,12 +139,10 @@ export default function Home() {
   const totalTransactions = transactions.length;
   const uniqueCategories = new Set(transactions.map(tx => tx.category)).size;
 
-  // Recent transactions (sorted by date desc)
   const recentTransactions = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  // Simple spending insight
   let spendingInsight = '';
   if (monthlyData.length > 1) {
     const last = monthlyData[monthlyData.length - 1].amount;
@@ -202,7 +156,6 @@ export default function Home() {
     }
   }
 
-  // Build budget vs actual data for chart
   const budgetData = Object.keys(budgetInputs).length > 0
     ? Object.keys(budgetInputs).map((category) => {
         const actual = transactions
@@ -224,7 +177,6 @@ export default function Home() {
     );
   }
 
-  // Budget setting UI
   const allCategories = [
     'Food & Dining',
     'Home & Garden',
@@ -247,8 +199,7 @@ export default function Home() {
     setBudgetLoading(true);
     try {
       await setBudget(category, budgetMonth, Number(budgetInputs[category]));
-      const data = await fetchBudgets(budgetMonth);
-      setBudgets(data);
+      await fetchBudgets(budgetMonth);
     } catch (error) {
       console.error('Failed to save budget:', error);
     } finally {

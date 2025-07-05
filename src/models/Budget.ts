@@ -1,9 +1,13 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import { Schema, model, models } from 'mongoose';
 
-const BudgetSchema = new Schema({
+const budgetSchema = new Schema({
   category: { type: String, required: true },
-  month: { type: String, required: true }, // e.g., '2025-07'
   amount: { type: Number, required: true },
+  month: { type: String, required: true },
+}, {
+  timestamps: true,
 });
 
-export default models.Budget || model("Budget", BudgetSchema); 
+const Budget = models.Budget || model('Budget', budgetSchema);
+
+export default Budget; 

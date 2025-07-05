@@ -41,7 +41,7 @@ const AddTransactions = () => {
         e.preventDefault();
         
         try {
-            const newTransaction = await createTransaction({
+            await createTransaction({
                 title,
                 amount: Number(amount),
                 date,
